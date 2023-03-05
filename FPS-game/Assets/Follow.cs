@@ -11,20 +11,48 @@ public class Follow : MonoBehaviour
     [SerializeField] float chaseRange = 5f;
 
     NavMeshAgent agent;
+    bool provoked = false;
     float distancetotarget = Mathf.Infinity;
     void Start()
     {
      agent = GetComponent<NavMeshAgent>();   
     }
 
-    // Update is called once per frame
-    void Update()
+     void Update()
     {
         distancetotarget = Vector3.Distance(target.position,transform.position);
-        if(distancetotarget <= chaseRange)
+        if(provoked)
         {
-               agent.SetDestination(target.position);   
+            ENGAGE();
         }
+        else if(distancetotarget <= chaseRange) {
+            provoked = true;
+        }
+       
         
+    }
+    void ENGAGE()
+    {
+        if (distancetotarget <= agent.stoppingDistance)
+        {
+            AttackPlay();
+        }
+        if (distancetotarget >=agent.stoppingDistance)
+        {
+            chasePlayer();
+        }
+    }
+    void chasePlayer()
+    {
+        agent.SetDestination(target.position);
+    }
+    private void AttackPlay()
+    {
+        Debug.Log("Attacking");
+    }
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, chaseRange);
     }
 }
