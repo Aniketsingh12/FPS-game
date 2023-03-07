@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting.Antlr3.Runtime;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -7,15 +8,17 @@ public class Follow : MonoBehaviour
 {
     // Start is called before the first frame update
 
-    [SerializeField] Transform target;
+    Transform target;
     [SerializeField] float chaseRange = 5f;
+    public float turnSpeed = 5f;
 
     NavMeshAgent agent;
     bool provoked = false;
     float distancetotarget = Mathf.Infinity;
     void Start()
     {
-     agent = GetComponent<NavMeshAgent>();   
+        target = FindObjectOfType<PlayerHealth>().transform;
+        agent = GetComponent<NavMeshAgent>();   
     }
 
      void Update()
@@ -33,6 +36,7 @@ public class Follow : MonoBehaviour
     }
     void ENGAGE()
     {
+        FaceTarget();
         if (distancetotarget <= agent.stoppingDistance)
         {
             AttackPlay();
@@ -42,17 +46,30 @@ public class Follow : MonoBehaviour
             chasePlayer();
         }
     }
+    public void OnDamageTaken()
+    {
+        provoked = true;
+    }
     void chasePlayer()
     {
+        GetComponent<Animator>().SetBool("attack", false);
+        GetComponent<Animator>().SetTrigger("move");
         agent.SetDestination(target.position);
     }
     private void AttackPlay()
     {
-        Debug.Log("Attacking");
+        GetComponent<Animator>().SetBool("attack", true);
+      
     }
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, chaseRange);
+    }
+    private void FaceTarget()
+    {
+        Vector3 direction = (target.position - transform.position).normalized;
+        Quaternion lookRotation = Quaternion.LookRotation(new Vector3(direction.x, 0, direction.z));
+        transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * turnSpeed);
     }
 }
